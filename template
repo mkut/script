@@ -1,0 +1,18 @@
+#!/bin/zsh
+
+if [ "${TEMPLATE_PATH}" = "" ]
+then
+	echo $TEMPLATE_PATH
+	echo "templates path is not defined."
+	exit 1
+elif [ $# -lt 1 ]
+then
+	echo "USAGE: template name"
+	exit 1
+elif [ ! -d "${TEMPLATE_PATH}/$1" ]
+then
+	echo "$1 not found."
+	exit 1
+else
+	cp -rfL `find "${TEMPLATE_PATH}/$1" -maxdepth 1 -mindepth 1` .
+fi
