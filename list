@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+
+class SolvedManager
+	def initialize
+		# @root = File.new(".")
+		@problems = { }
+		Dir::foreach('.') { |set|
+			if FileTest.directory?(set) && set[0] != '.' then
+				@problems[set] = Array.new
+				Dir::foreach(set) { |problem|
+					if FileTest.directory?(set + "/" + problem) && problem[0] != '.' then
+						info = {:name => problem, :flag => problem[0] == '!' ? :wa : :ac}
+						@problems[set].push(info)
+					end
+				}
+			end
+		}
+	end
+
+	def count_with_flag(set, flag)
+		set.select{|x| x[:flag] == flag}.length
+	end
+
+	def list
+		set_len = @problems.keys.map{|x| x.length}.max
+		ac_len  = @problems.values.map{|set| count_with_flag(set, :ac).to_s.length}.max
+		ac_len  = 2 if ac_len < 2
+		wa_len  = @problems.values.map{|set| count_with_flag(set, :wa).to_s.length}.max
+		wa_len  = 2 if wa_len < 2
+		puts "#{with_space("", set_len)}  #{with_space("AC", ac_len)} #{with_space("WA", wa_len)}"
+		@problems.keys.sort.each { |key|
+			ac = count_with_flag(@problems[key], :ac)
+			wa = count_with_flag(@problems[key], :wa)
+			puts "#{with_space(key, set_len)}: #{with_space(ac.to_s, ac_len)} #{with_space(wa.to_s, wa_len)}"
+		}
+	end
+
+	def rep_space(n)
+		if n < 0 then "" else " " * n end
+	end
+
+	def with_space(str, n)
+		"#{rep_space(n - str.length)}#{str}"
+	end
+end
+
+SolvedManager.new.list
