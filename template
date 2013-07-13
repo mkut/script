@@ -14,5 +14,5 @@ then
 	echo "$1 not found."
 	exit 1
 else
-	cp -rfL `find "${TEMPLATE_PATH}/$1" -maxdepth 1 -mindepth 1` .
+	cp -rfL `find "${TEMPLATE_PATH}/$1" -maxdepth 1 -mindepth 1 -follow` .
 fi
