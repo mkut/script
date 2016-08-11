@@ -1,18 +1,38 @@
-#!/bin/zsh
+#! /usr/bin/env ruby
 
-if [ "${TEMPLATE_PATH}" = "" ]
-then
-	echo $TEMPLATE_PATH
-	echo "templates path is not defined."
+require 'pathname'
+require 'fileutils'
+
+if ENV['TEMPLATE_PATH'].nil? then
+	puts "TEMPLATE_PATH is not defined."
 	exit 1
-elif [ $# -lt 1 ]
-then
-	echo "USAGE: template name"
-	exit 1
-elif [ ! -d "${TEMPLATE_PATH}/$1" ]
-then
-	echo "$1 not found."
-	exit 1
+elsif ARGV.empty? then
+	puts "Usage: template [template_name]"
+	exit 2
+elsif !File.exists? Pathname.new(ENV['TEMPLATE_PATH']) + ARGV[0] then
+	puts "template #{ARGV[0]} is not found."
+	exit 3
 else
-	cp -rfL `find "${TEMPLATE_PATH}/$1" -maxdepth 1 -mindepth 1 -follow` .
-fi
+	dir = Pathname.new(ENV['TEMPLATE_PATH']) + ARGV[0]
+	Dir.glob(dir + '**/*').each { |path|
+		path = Pathname.new(path)
+		dest_path = path.relative_path_from(dir)
+		if path.directory? then
+			dest_path.mkdir
+		else
+			FileUtils.copy_file(path, dest_path, dereference_root: true)
+			File.open(dest_path, 'r+') { |file|
+				contents = file.read.gsub(/#REPLACE{([^}]+)}/) {
+					if ENV[$1].nil? then
+						puts "'#{$1}' is not defined. Please input the value:"
+						ENV[$1] = STDIN.gets.chomp
+					end
+					ENV[$1]
+				}
+				file.rewind
+				file.write(contents)
+			}
+		end
+	}
+	# cp -rfL `find "${TEMPLATE_PATH}/$1" -maxdepth 1 -mindepth 1 -follow` .
+end
